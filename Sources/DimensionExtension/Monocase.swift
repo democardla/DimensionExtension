@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Monocase {
+public struct Monocase {
     var moleMass: Double = 0
     static var unit = UnitConcentrationMass.gramsPerLiter
     var concentration: Concentration
