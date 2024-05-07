@@ -12,7 +12,7 @@ public struct Monocase {
     static var unit = UnitConcentrationMass.gramsPerLiter
     var concentration: Concentration
     
-    init(moleMass: Double, value: Double, unit: String) {
+    public init(moleMass: Double, value: Double, unit: String) {
         self.moleMass = moleMass
         self.concentration = Concentration(value: value, unit: Monocase.unit.uString(unit, moleMass))
     }
