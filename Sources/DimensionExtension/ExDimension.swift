@@ -28,6 +28,9 @@ extension Dimension {
 // MARK: 对`UnitConcentrationMass`的扩展。
 extension UnitConcentrationMass {
 
+    public static let moleC = ["mol/L", "mmol/L", "umol/L", "nmol/L"]
+    public static let massC = ["kg/L", "g/mL", "g/L", "mg/mL", "mg/L", "ng/L"]
+    
     /// kg/L
     public class var kilogramsPerLiter: UnitConcentrationMass {
         return getCustomUnit(coefficient: .thousand(1), symbol: "kg/L")
@@ -85,7 +88,7 @@ extension UnitConcentrationMass {
     ///         |ng/L| .nanogramsPerLiter|
     ///         |default| .gramsPerLiter|
     /// - Returns: 质量浓度的度量单位
-    func uString(_ unit: String) -> UnitConcentrationMass {
+    public func uString(_ unit: String) -> UnitConcentrationMass {
         switch unit {
             case "kg/L":
                 return .kilogramsPerLiter
@@ -114,7 +117,7 @@ extension UnitConcentrationMass {
     ///     |nmol/L|.nanomolesPerLiter(withGramsPerMole: gramsPerMole)|
     ///   - gramsPerMole: 摩尔质量
     /// - Returns: 质量浓度的度量单位
-    func uString(_ unit: String, _ gramsPerMole: Double) -> UnitConcentrationMass {
+    public func uString(_ unit: String, _ gramsPerMole: Double) -> UnitConcentrationMass {
         switch unit {
             case "mol/L":
                 return .molesPerLiter(withGramsPerMole: gramsPerMole)
@@ -146,20 +149,60 @@ extension UnitVolume {
 }
 
 /// 自定义的倍速浓度单位
-class UnitChemicalConcentration: Dimension {
+///
+/// |Name|Method|Symbol|Coefficient|
+/// |-|-|-|-|
+/// |Time|``time``|X|1.0|
+public class UnitChemicalConcentration: Dimension {
     
     /// 设置基础单位
-    /// - Returns: 返回一个基础单位
+    /// - Returns: 基础单位为``time``
     /// - Important: 返回值需要进行类型强行转换。
-    
-    override class func baseUnit() -> Self {
+    public override class func baseUnit() -> Self {
         return self.time as! Self
     }
     
     /// The grams per liter unit of concentration.
     public class var time: UnitChemicalConcentration {
-        let converter = UnitConverterLinear(coefficient: .thousand(0))
-        return UnitChemicalConcentration(symbol: "g/L", converter: converter)
+        return getCustomUnit(coefficient: 1, symbol: "X")
+    }
+    
+    public static let unitArray = ["X"]
+}
+
+/// 自定义物质的量单位
+///
+/// |Name|Method|Symbol|Coefficient|
+/// |-|-|-|-|
+/// |Mole|``mole``|mole|1.0|
+/// |Millimole|``mmole``|mmole|e-3|
+/// |Micromole|``umole``|umole|e-6|
+/// |Nanomole|``nmole``|nmole|e-9|
+public class UnitMole: Dimension {
+    /// 设置基础单位
+    /// - Returns: 基础单位为``mole``
+    public override class func baseUnit() -> Self {
+        return self.mole as! Self
+    }
+    
+    /// mole
+    public class var mole: UnitMole {
+        return getCustomUnit(coefficient: 1, symbol: "mole")
+    }
+    
+    /// millimole
+    public class var mmole: UnitMole {
+        return getCustomUnit(coefficient: .thousand(-1), symbol: "mmole")
+    }
+    
+    /// micromole
+    public class var umole: UnitMole {
+        return getCustomUnit(coefficient: .thousand(-2), symbol: "umole")
+    }
+    
+    /// nanomole
+    public class var nmole: UnitMole {
+        return getCustomUnit(coefficient: .thousand(-3), symbol: "nmole")
     }
 }
 

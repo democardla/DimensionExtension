@@ -25,7 +25,42 @@ final class DimensionExtensionTests: XCTestCase {
 final class MonocaseTests: XCTestCase {
     /// 具有摩尔质量的单体测试
     func testMonocase() throws {
-        var monocase = Monocase(moleMass: 12, value: 12, unit: "mol/L")
-        print(monocase.concentration)
+        let monocase = Monocase(moleMass: 12, value: 12, unit: .grams)
+        print(monocase)
+    }
+}
+
+final class MeasurementTests: XCTestCase {
+    /// 具有质量浓度的除法测试
+    func testDivision() throws {
+        let mass = Mass(value: 5, unit: .grams)
+        let volume = Volume(value: 1, unit: .liters)
+        let exp1 = mass / volume
+        let exp2 = Concentration(value: 5, unit: .gramsPerLiter)
+        XCTAssertEqual(exp1, exp2, "❌：【除法】结果与预期结果不符")
+    }
+    /// 具有质量浓度的除法测试(Monocase)
+    func testDivision_Monocase() throws {
+        let mono = Monocase(moleMass: 12, value: 12, unit: .grams)
+        let volume = Volume(value: 1, unit: .liters)
+        let exp1 = mono / volume
+        let exp2 = Concentration(value: 12, unit: .gramsPerLiter)
+        XCTAssertEqual(exp1, exp2, "❌：【除法(Monocase)】结果与预期结果不符")
+    }
+    /// 具有质量浓度的除法测试(MoleMonocase)
+    func testDivision_MoleMonocase() throws {
+        let mono = MoleMonocase(moleMass: 12, value: 12, unit: .mmole)
+        let volume = Volume(value: 1, unit: .milliliters)
+        let exp1 = mono / volume
+        let exp2 = Concentration(value: 12, unit: .molesPerLiter(withGramsPerMole: mono.moleMass))
+        XCTAssertEqual(exp1, exp2, "❌：【除法(MoleMonocase)】结果与预期结果不符")
+    }
+    
+    func testWrapper() throws {
+        let exp2 = Concentration(value: 12, unit: .molesPerLiter(withGramsPerMole: 18))
+        @ConcentrationWrapper(moleMass: 18, wrappedValue: exp2) var conc
+        print(conc)
+//        print($conc)
+        print(_conc.moleMass)
     }
 }
