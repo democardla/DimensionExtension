@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// 摩尔单体
+/// 摩尔包装类
 @propertyWrapper
 public struct MoleWrapper: DataWrapperPublicHandle {
     public typealias T = Mole

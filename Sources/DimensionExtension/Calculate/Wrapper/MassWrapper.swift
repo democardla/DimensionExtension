@@ -15,40 +15,27 @@ import Foundation
 ///     |-|-|
 ///     |``moleMass``|单体的摩尔质量|
 ///     |``value``|称取的该物质的质量|
-///     |``unit``|计量单位|
 @propertyWrapper
-public struct MassWrapper {
+public struct MassWrapper: DataWrapperPublicHandle {
+    /// 质量表达
+    public var value: Mass = Mass(value: 0, unit: .grams)
+ 
     public var wrappedValue: Mass {
-        get { mass }
-        set { mass = newValue }
+        get { value }
+        set { value = newValue }
     }
     
     /// 摩尔质量
     public var moleMass: Double
     
-//    /// 称取的该物质的质量
-//    var value: Double
-//    
-//    /// 计量单位
-//    var unit: UnitMass
-    
-    /// 质量表达
-    public var mass: Mass = Mass(value: 0, unit: .grams)
-//    {
-//        return Mass(value: value, unit: unit)
-//    }
-    
-//    static var unit = UnitConcentrationMass.gramsPerLiter
-//    var concentration: Concentration
-//    
-//    public init(moleMass: Double, value: Double, unit: String) {
-//        self.moleMass = moleMass
-//        self.concentration = Concentration(value: value, unit: Monocase.unit.uString(unit, moleMass))
-//    }
-    
     public init(wrappedValue: Mass, moleMass: Double) {
         self.moleMass = moleMass
-        mass = wrappedValue
+        value = wrappedValue
+    }
+    
+    public init(moleMass: Double, value: Double, unit: String) {
+        let wrappedValue = Mass(value: value, unit: UnitMass.grams.uString(unit))
+        self.init(wrappedValue: wrappedValue, moleMass: moleMass)
     }
 
     public init() {

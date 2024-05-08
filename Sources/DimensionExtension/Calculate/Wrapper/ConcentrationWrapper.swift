@@ -7,13 +7,33 @@
 
 import Foundation
 
-
+/// 浓度属性包装器
+///
+/// # 使用时注意事项
+///
+/// 使用该包装器创建实例必须给出确切的摩尔质量``moleMass``，以便于后续进行摩尔浓度与质量浓度之间的转换（如果有需要）
+///
+/// **下面是创建实例的演示**
+///
+/// 如果是质量浓度（以kg/L为例）请使用
+/// ```
+/// @ConcentrationWrapper(moleMass: 18, value: 18, unit: "g/L") var concs
+/// ```
+/// 或者
+/// ```
+/// @ConcentrationWrapper(moleMass: 18) var conc: Concentration = Concentration(value: 12, unit: .gramsPerLiter)
+/// ```
+/// 如果是摩尔浓度（以mol/L为例）请使用
+///
+/// ```
+/// @ConcentrationWrapper(moleMass: 18, value: 18, unit: "mol/L") var concs
+/// ```
 @propertyWrapper
-/// <#Description#>
-public struct ConcentrationWrapper{
+public struct ConcentrationWrapper: DataWrapperPublicHandle{
     
     /// 浓度值
-    private var value: Concentration = Concentration(value: 0, unit: .gramsPerLiter)
+    public var value: Concentration = Concentration(value: 0, unit: .gramsPerLiter)
+    
     public var wrappedValue: Concentration {
         get { value }
         set { 
@@ -22,13 +42,7 @@ public struct ConcentrationWrapper{
     }
     
     /// 摩尔质量
-    public let moleMass: Double
-    
-    private var moleC: [String] = ["mol/L", "mmol/L", "umol/L", "nmol/L"]
-    private var massC: [String] = ["kg/L", "g/L", "mg/L", "ng/L"]
-    private var timeC: [String] {
-        return ["X"]
-    }
+    public var moleMass: Double
     
     /// 打印值
     public var projectedValue: String {
@@ -36,21 +50,47 @@ public struct ConcentrationWrapper{
     }
     
     /// 当前单位符号集
-    private var currentC: [String] {
+    private var currentSet: CSet {
         let symbol = wrappedValue.unit.symbol
-        if moleC.contains(symbol) {
-            return moleC
-        } else if massC.contains(symbol) {
-            return massC
-        }
-        
-        return timeC
+        return CSet.currentSetType(symbol)
     }
     
-    /// 单位转换
+    private enum CSet {
+        case mole
+        case mass
+        case time
+        
+        /// 获得单位集
+        /// - Returns: 枚举对应的单位集
+        func getUnitSet() -> [String] {
+            switch self {
+                case .mole:
+                    return ["mol/L", "mmol/L", "umol/L", "nmol/L"]
+                case .mass:
+                    return ["kg/L", "g/L", "mg/L", "ng/L"]
+                default:
+                    return ["X"]
+            }
+        }
+        
+        /// 获得当前的单位集类型
+        /// - Parameter symbol: 单位符号如`g/L`
+        /// - Returns: 单位集类型
+        static func currentSetType(_ symbol: String) -> CSet {
+            if mole.getUnitSet().contains(symbol) {
+                return mole
+            } else if mass.getUnitSet().contains(symbol) {
+                return mass
+            }
+            
+            return time
+        }
+    }
+    
+    /// 转换为固定单位符号代表的单位
     /// - Parameter to: 单位符号
     public mutating func convert(to: String) {
-        if moleC.contains(to) {
+        if CSet.mole.getUnitSet().contains(to) {
             wrappedValue.convert(to: to, moleMass)
             return
         }
@@ -61,40 +101,58 @@ public struct ConcentrationWrapper{
     /// - Parameter to: 单位符号
     /// - Returns: 摩尔浓度||质量浓度
     public func converted(to: String) -> Concentration {
-        if moleC.contains(to) {
+        if CSet.mole.getUnitSet().contains(to) {
             return wrappedValue.converted(to: to, moleMass)
         }
         return wrappedValue.converted(to: to)
     }
     
     /// 把单位向上或向下转换一个进制
-    /// - Parameter
-    ///     - offset: 向大单位转化使用
     ///
-    ///     |Value|Description|
-    ///     |-|-|
-    ///     | -1|单位减小，数值增加|
-    ///     | 1|单位增加，数值减小|
+    /// - Parameter offset: 单位转换使用
+    ///
+    ///  下面是关于
+    ///  |Value|Description|
+    ///  |-|-|
+    ///  | -1|单位减小，数值增加|
+    ///  | 1|单位增加，数值减小|
+    ///
+  
     public mutating func convert(_ offset: Int) throws {
         let current = value.unit.symbol
-        guard let index = currentC.firstIndex(of: current) else {
+        guard let index = currentSet.getUnitSet().firstIndex(of: current) else {
             throw NSError(domain: "输入不正确", code: 1, userInfo: nil) as Error
         }
-        if index != 0 && index != currentC.endIndex - 1 {
+        if index != 0 && index != currentSet.getUnitSet().endIndex - 1 {
             let newIndex = index - offset
-            convert(to: currentC[newIndex])
+            convert(to: currentSet.getUnitSet()[newIndex])
         }
     }
     
-    /// 默认初始化器不要忘记重写
+    
     public init() {
         moleMass = 0
     }
     
+    /// <#Description#>
+    /// - Parameters:
+    ///   - moleMass: <#moleMass description#>
+    ///   - value: <#value description#>
+    ///   - unit: <#unit description#>
     public init(moleMass: Double, value: Double, unit: String) {
         self.moleMass = moleMass
-        let unitMass = self.value.unit.uString(unit, moleMass)
-        self.value = Concentration(value: value, unit: unitMass)
+        let cunit:UnitConcentrationMass
+        switch currentSet {
+            case .mole:
+                cunit = self.value.unit.uString(unit, moleMass)
+            case .mass:
+                cunit = self.value.unit.uString(unit)
+            default:
+                // TODO: 倍乘 democardla@icloud.com
+                cunit = self.value.unit.uString(unit)
+        }
+        
+        self.value = Concentration(value: value, unit: cunit)
         
     }
     
@@ -102,4 +160,18 @@ public struct ConcentrationWrapper{
         self.moleMass = moleMass
         value = wrappedValue
     }
+}
+
+extension ConcentrationWrapper {
+    
+    /// 质量浓度和摩尔浓度相互转换
+    public mutating func toggle() {
+        if currentSet == .mass {
+            self.wrappedValue.convert(to: "mol/L", self.moleMass)
+        } else {
+            self.wrappedValue.convert(to: "g/L")
+        }
+    }
+    
+    
 }
