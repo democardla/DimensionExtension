@@ -28,6 +28,7 @@ final class MonocaseTests: XCTestCase {
         @MassWrapper(moleMass: 12) var monocase = Mass(value: 12, unit: .grams)
         Info.titled("Monocase")
             .log(monocase)
+            .end()
     }
 }
 
@@ -72,7 +73,9 @@ final class MeasurementTests: XCTestCase {
         print(res)
         print($conc)
         
-        Info.titled("提示").log("nihao")
+        Info.titled("提示")
+            .log("nihao")
+            .end()
     }
 }
 
@@ -85,20 +88,25 @@ final class InfoTests: XCTestCase {
 
         Info.titled("打印日志功能测试")
             .log(exp2)
+            .end()
     }
     
     /// 打印日志功能测试
     func testConverter() throws {
         @ConcentrationWrapper(moleMass: 12, value: 0.12, unit: "g/L") var con
+        @TimesConcentrationWrapper(value: 5) var time
         
         @ConcentrationWrapper(moleMass: 12, value: 12, unit: "g/L") var metaC
-        var time = TimesConcentration(value: 1, unit: .time)
-        
-        let link = _metaC ~ time
+        @TimesConcentrationWrapper(value: 1) var metaT
+    
+        let link = _metaC ~ _metaT
         let res = link.x2y(_con)
+        let res2 = link.y2x(_time)
         
         Info.titled("converter功能测试")
             .log(res)
+            .log(res2)
+            .end()
     }
     
 }
