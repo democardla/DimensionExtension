@@ -21,10 +21,15 @@ public class Info {
     }
     /// 在控制台打印日志
     /// - Parameter content: 想要打印的任意值
-    public static func log(_ content: Any) {
+    public static func log(_ content: Any) -> Info.Type {
         let symbol: Symbol = .log
         print("\(symbol.rawValue) [Log] <\(title)> \(content)")
+        return Info.self
     }
     
+    /// 结束的分割线
+    public static func end() {
+        print("|~~~~~~~~~~END~~~~~~~~~~|")
+    }
     
 }
