@@ -1,33 +1,25 @@
-//
-//  File.swift
-//  
-//
-//  Created by DemoCardla on 2024/5/7.
-//
-
 import Foundation
-
 /// 浓度属性包装器
 ///
 /// # 使用时注意事项
+/// 使用``ConcentrationWrapper``包装器创建实例必须给出确切的摩尔质量``moleMass``，以便于后续进行摩尔浓度与质量浓度之间的转换（如果有需要）。通过以下方式创建包装类实例：
 ///
-/// 使用该包装器创建实例必须给出确切的摩尔质量``moleMass``，以便于后续进行摩尔浓度与质量浓度之间的转换（如果有需要）
-///
-/// **下面是创建实例的演示**
-///
-/// 如果是质量浓度（以kg/L为例）请使用
+/// 如果是质量浓度（以kg/L为例）
 /// ```
 /// @ConcentrationWrapper(moleMass: 18, value: 18, unit: "g/L") var concs
 /// ```
-/// 或者
-/// ```
-/// @ConcentrationWrapper(moleMass: 18) var conc: Concentration = Concentration(value: 12, unit: .gramsPerLiter)
-/// ```
-/// 如果是摩尔浓度（以mol/L为例）请使用
+/// 如果是摩尔浓度（以mol/L为例）
 ///
 /// ```
 /// @ConcentrationWrapper(moleMass: 18, value: 18, unit: "mol/L") var concs
 /// ```
+/// 初始化器中的参数描述
+///
+/// |Parameter|Description|
+/// |-|-|
+/// |``moleMass``|摩尔质量|
+/// |``value``|实际浓度的计量值|
+/// |``unit``|浓度的计量单位|
 @propertyWrapper
 public struct ConcentrationWrapper: DataWrapperPublicHandle{
     
@@ -55,10 +47,10 @@ public struct ConcentrationWrapper: DataWrapperPublicHandle{
         return CSet.currentSetType(symbol)
     }
     
+    /// 当前包装类使用的单位类型
     private enum CSet {
         case mole
         case mass
-        case time
         
         /// 获得单位集
         /// - Returns: 枚举对应的单位集
@@ -68,8 +60,6 @@ public struct ConcentrationWrapper: DataWrapperPublicHandle{
                     return ["mol/L", "mmol/L", "umol/L", "nmol/L"]
                 case .mass:
                     return ["kg/L", "g/L", "mg/L", "ng/L"]
-                default:
-                    return ["X"]
             }
         }
         
@@ -79,11 +69,8 @@ public struct ConcentrationWrapper: DataWrapperPublicHandle{
         static func currentSetType(_ symbol: String) -> CSet {
             if mole.getUnitSet().contains(symbol) {
                 return mole
-            } else if mass.getUnitSet().contains(symbol) {
-                return mass
             }
-            
-            return time
+            return mass
         }
     }
     
@@ -116,8 +103,6 @@ public struct ConcentrationWrapper: DataWrapperPublicHandle{
     ///  |-|-|
     ///  | -1|单位减小，数值增加|
     ///  | 1|单位增加，数值减小|
-    ///
-  
     public mutating func convert(_ offset: Int) throws {
         let current = value.unit.symbol
         guard let index = currentSet.getUnitSet().firstIndex(of: current) else {
@@ -134,23 +119,24 @@ public struct ConcentrationWrapper: DataWrapperPublicHandle{
         moleMass = 0
     }
     
-    /// <#Description#>
+    /// 建议使用的初始化器
     /// - Parameters:
-    ///   - moleMass: <#moleMass description#>
-    ///   - value: <#value description#>
-    ///   - unit: <#unit description#>
+    ///   - moleMass: 物质的摩尔质量
+    ///   - value: 物质的实际测量浓度值
+    ///   - unit: 物质的浓度计量单位
     public init(moleMass: Double, value: Double, unit: String) {
         self.moleMass = moleMass
         let cunit:UnitConcentrationMass
-        switch currentSet {
-            case .mole:
-                cunit = self.value.unit.uString(unit, moleMass)
-            case .mass:
-                cunit = self.value.unit.uString(unit)
-            default:
-                // TODO: 倍乘 democardla@icloud.com
-                cunit = self.value.unit.uString(unit)
-        }
+//        switch currentSet {
+//            case .mole:
+//                cunit = self.value.unit.uString(unit, moleMass)
+//            case .mass:
+//                cunit = self.value.unit.uString(unit)
+//            default:
+//                // TODO: 倍乘 democardla@icloud.com
+//                cunit = self.value.unit.uString(unit)
+//        }
+        cunit = (currentSet == .mole) ? self.value.unit.uString(unit, moleMass) : self.value.unit.uString(unit)
         
         self.value = Concentration(value: value, unit: cunit)
         
@@ -173,5 +159,13 @@ extension ConcentrationWrapper {
         }
     }
     
-    
+    /// 中缀运算符：相关
+    /// - Parameters:
+    ///   - lh: 计量单元
+    ///   - rh: 倍乘计量单位
+    /// - Returns: 浓度&倍乘浓度线性模型描述
+    public static func ~ (lh: ConcentrationWrapper, rh: TimesConcentrationWrapper) -> CTCorrelation {
+        let res = CTCorrelation(x: lh, y: rh)
+        return res
+    }
 }
