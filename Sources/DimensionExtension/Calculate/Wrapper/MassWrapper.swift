@@ -18,7 +18,7 @@ import Foundation
 @propertyWrapper
 public struct MassWrapper: DataWrapperPublicHandle {
     /// 质量表达
-    public var value: Mass = Mass(value: 0, unit: .grams)
+    public var value: Mass
  
     public var wrappedValue: Mass {
         get { value }
@@ -40,6 +40,7 @@ public struct MassWrapper: DataWrapperPublicHandle {
 
     public init() {
         moleMass = 0
+        value = Mass(value: 0, unit: .grams)
     }
     
 }
