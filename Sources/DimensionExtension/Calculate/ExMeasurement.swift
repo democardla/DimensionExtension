@@ -30,14 +30,5 @@ extension Measurement {
         return Concentration(value: result, unit: .molesPerLiter(withGramsPerMole: lh.moleMass))
     }
     
-    /// 中缀运算符：相关
-    /// - Parameters:
-    ///   - lh: 计量单元
-    ///   - rh: 倍乘计量单位
-    /// - Returns: <#description#>
-    public static func ~ (lh: ConcentrationWrapper, rh: TimesConcentration) -> CTCorrelation {
-        return CTCorrelation(x: lh, y: rh)
-    }
-    
 }
 
